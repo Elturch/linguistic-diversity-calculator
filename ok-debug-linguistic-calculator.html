@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Diversidad Lingüística</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; line-height: 1.6; }
+        textarea { width: 100%; height: 200px; margin-bottom: 10px; padding: 10px; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        #wordCount { margin-top: 10px; font-weight: bold; }
+        .explanation { margin-top: 10px; font-style: italic; }
+        .metric-explanation { margin-top: 5px; font-size: 0.9em; color: #555; }
+    </style>
+</head>
+<body>
+    <h1>Calculadora de Diversidad Lingüística</h1>
+    <textarea id="textInput" placeholder="Ingrese su texto aquí (mínimo 100 palabras para un análisis más preciso)..."></textarea>
+    <div id="wordCount"></div>
+    <button onclick="analyzeText()">Analizar</button>
+    <div id="results"></div>
+
+    <script>
+        function countWords(text) {
+            return (text.match(/\b\w+\b/g) || []).length;
+        }
+
+        function updateWordCount() {
+            const text = document.getElementById('textInput').value;
+            const wordCount = countWords(text);
+            document.getElementById('wordCount').textContent = `Palabras: ${wordCount}`;
+        }
+
+        document.getElementById('textInput').addEventListener('input', updateWordCount);
+
+        function analyzeText() {
+            console.log("Función analyzeText() llamada");
+            const text = document.getElementById('textInput').value;
+            const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+            const sentences = text.split(/[.!?]+/).filter(Boolean);
+
+            if (words.length < 100) {
+                alert("Para un análisis más preciso, ingrese al menos 100 palabras.");
+                return;
+            }
+
+            // Variedad léxica
+            const uniqueWords = new Set(words);
+            const lexicalVariety = uniqueWords.size / words.length;
+
+            // Longitud promedio de oraciones
+            const avgSentenceLength = words.length / sentences.length;
+
+            // Proporción de palabras complejas (más de 3 sílabas)
+            const complexWords = words.filter(word => syllableCount(word) > 3);
+            const complexWordsRatio = complexWords.length / words.length;
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h2>Resultados del Análisis:</h2>
+                <table>
+                    <tr>
+                        <th>Métrica</th>
+                        <th>Valor</th>
+                        <th>Interpretación</th>
+                    </tr>
+                    <tr>
+                        <td>Variedad Léxica</td>
+                        <td>${lexicalVariety.toFixed(2)}</td>
+                        <td>${interpretLexicalVariety(lexicalVariety)}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="metric-explanation">${getLexicalVarietyExplanation(lexicalVariety)}</td>
+                    </tr>
+                    <tr>
+                        <td>Longitud Promedio de Oraciones</td>
+                        <td>${avgSentenceLength.toFixed(2)}</td>
+                        <td>${interpretSentenceLength(avgSentenceLength)}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="metric-explanation">${getSentenceLengthExplanation(avgSentenceLength)}</td>
+                    </tr>
+                    <tr>
+                        <td>Proporción de Palabras Complejas</td>
+                        <td>${complexWordsRatio.toFixed(2)}</td>
+                        <td>${interpretComplexWords(complexWordsRatio)}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="metric-explanation">${getComplexWordsExplanation(complexWordsRatio)}</td>
+                    </tr>
+                </table>
+                <p><strong>Evaluación General:</strong> ${getOverallEvaluation(lexicalVariety, avgSentenceLength, complexWordsRatio)}</p>
+                <p class="explanation">${getOverallExplanation(lexicalVariety, avgSentenceLength, complexWordsRatio)}</p>
+            `;
+            console.log("Análisis completado");
+        }
+
+        function syllableCount(word) {
+            word = word.toLowerCase();
+            if(word.length <= 3) { return 1; }
+            word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+            word = word.replace(/^y/, '');
+            return (word.match(/[aeiouy]{1,2}/g) || []).length;
+        }
+
+        function interpretLexicalVariety(value) {
+            if (value < 0.3) return "Baja";
+            if (value < 0.4) return "Moderada-baja";
+            if (value < 0.5) return "Moderada";
+            if (value < 0.6) return "Moderada-alta";
+            if (value < 0.7) return "Alta";
+            return "Muy alta";
+        }
+
+        function getLexicalVarietyExplanation(value) {
+            let explanation = "La variedad léxica mide la diversidad de vocabulario en el texto. ";
+            if (value < 0.3) {
+                explanation += "Un valor bajo indica repetición frecuente de palabras. Considere ampliar su vocabulario.";
+            } else if (value < 0.5) {
+                explanation += "Un valor moderado sugiere un buen balance, pero hay espacio para mejorar la variedad de palabras.";
+            } else {
+                explanation += "Un valor alto indica un vocabulario rico y diverso, lo cual es excelente para la calidad del texto.";
+            }
+            return explanation;
+        }
+
+        function interpretSentenceLength(value) {
+            if (value < 10) return "Muy cortas";
+            if (value < 15) return "Cortas";
+            if (value < 20) return "Óptimas";
+            if (value < 25) return "Largas";
+            return "Muy largas";
+        }
+
+        function getSentenceLengthExplanation(value) {
+            let explanation = "La longitud promedio de oraciones afecta la legibilidad y el ritmo del texto. ";
+            if (value < 15) {
+                explanation += "Oraciones muy cortas pueden hacer que el texto sea abrupto. Considere combinar algunas oraciones.";
+            } else if (value > 25) {
+                explanation += "Oraciones muy largas pueden ser difíciles de seguir. Intente dividir algunas oraciones para mejorar la claridad.";
+            } else {
+                explanation += "Este rango es generalmente considerado óptimo para la mayoría de los textos, ofreciendo un buen balance entre concisión y detalle.";
+            }
+            return explanation;
+        }
+
+        function interpretComplexWords(value) {
+            if (value < 0.1) return "Muy simple";
+            if (value < 0.15) return "Simple";
+            if (value < 0.2) return "Moderado";
+            if (value < 0.25) return "Complejo";
+            return "Muy complejo";
+        }
+
+        function getComplexWordsExplanation(value) {
+            let explanation = "La proporción de palabras complejas indica el nivel de sofisticación del vocabulario. ";
+            if (value < 0.1) {
+                explanation += "Un texto muy simple puede ser fácil de leer, pero podría carecer de profundidad para algunos temas.";
+            } else if (value > 0.25) {
+                explanation += "Un texto muy complejo puede ser difícil de entender. Considere simplificar algunas expresiones si su audiencia no es especializada.";
+            } else {
+                explanation += "Este rango generalmente ofrece un buen balance entre accesibilidad y sofisticación.";
+            }
+            return explanation;
+        }
+
+        function getOverallEvaluation(lexicalVariety, avgSentenceLength, complexWordsRatio) {
+            let score = 0;
+            score += (lexicalVariety >= 0.5) ? 1 : 0;
+            score += (avgSentenceLength >= 15 && avgSentenceLength <= 25) ? 1 : 0;
+            score += (complexWordsRatio >= 0.1 && complexWordsRatio <= 0.2) ? 1 : 0;
+
+            switch(score) {
+                case 3: return "Excelente diversidad lingüística";
+                case 2: return "Buena diversidad lingüística";
+                case 1: return "Diversidad lingüística moderada";
+                case 0: return "Baja diversidad lingüística";
+            }
+        }
+
+        function getOverallExplanation(lexicalVariety, avgSentenceLength, complexWordsRatio) {
+            let explanation = "Esta evaluación se basa en el balance entre variedad léxica, longitud de oraciones y complejidad del vocabulario. ";
+            
+            if (lexicalVariety < 0.5) {
+                explanation += "Considere aumentar la variedad de palabras utilizadas. ";
+            }
+            if (avgSentenceLength < 15 || avgSentenceLength > 25) {
+                explanation += "Ajuste la longitud de sus oraciones para mejorar la fluidez. ";
+            }
+            if (complexWordsRatio < 0.1 || complexWordsRatio > 0.2) {
+                explanation += "Revise el nivel de complejidad de su vocabulario para que sea apropiado para su audiencia. ";
+            }
+            
+            explanation += "Un texto bien equilibrado tendrá una variedad léxica por encima de 0.5, una longitud promedio de oraciones entre 15 y 25 palabras, y una proporción de palabras complejas entre 0.1 y 0.2.";
+            
+            return explanation;
+        }
+
+        // Inicializar el contador de palabras
+        updateWordCount();
+    </script>
+</body>
+</html>
